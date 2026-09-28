@@ -125,7 +125,9 @@ label.chk input{width:22px;height:22px}
 
 <script>
 /* URLの ?s=（裏方のID）&admin=（管理キー）&cancel=（取り消しキー） を読む */
-const Q = new URLSearchParams(location.search);
+/* 手で組み立てたリンクのよくあるズレ（2つ目の「?」、全角の「＆」「＝」）も読めるようにする */
+const rawQ = (()=>{try{return decodeURIComponent(location.search.slice(1))}catch(e){return location.search.slice(1)}})();
+const Q = new URLSearchParams(rawQ.replace(/[?？＆]/g,"&").replace(/＝/g,"="));
 const clean = v => String(v||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,120);
 const BOOT = { s: clean(Q.get("s")), admin: clean(Q.get("admin")), cancel: clean(Q.get("cancel")) };
 BOOT.url = location.origin + location.pathname + "?s=" + BOOT.s;
