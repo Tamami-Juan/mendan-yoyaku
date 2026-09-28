@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>面談予約</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F1; --paper:#FFFFFF; --ink:#1F3A5F; --sub:#5B6B7D; --line:#D6DDE3;
+  --open:#2E7D5B; --open-bg:#E3F2EA; --mine:#B7791F; --mine-bg:#FCF1DC; --taken:#9AA5B1; --danger:#B3413A;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#141A21; --paper:#1D252F; --ink:#E6EDF5; --sub:#9FB0C2; --line:#33404D;
+    --open:#6CCB9D; --open-bg:#1F3A2E; --mine:#F0C067; --mine-bg:#3D3120; --taken:#6B7785; --danger:#F08A82;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;font-size:17px;line-height:1.7;font-weight:500}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+header h1{font-size:30px;font-weight:900;margin:8px 0 2px;letter-spacing:.02em}
+header p{margin:0;color:var(--sub);font-size:15px}
+.tabs{display:flex;gap:8px;margin:18px 0 14px}
+.tabs button{flex:1;font:inherit;font-weight:700;font-size:15px;padding:10px 4px;border-radius:999px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+h2{font-size:19px;font-weight:900;margin:26px 0 8px}
+.day{background:var(--paper);border-radius:14px;padding:14px 14px 16px;margin-bottom:12px;border:1px solid var(--line)}
+.day h3{margin:0 0 10px;font-size:18px;font-weight:900}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (min-width:520px){.grid{grid-template-columns:repeat(6,1fr)}}
+.slot{font:inherit;font-weight:700;font-size:17px;padding:10px 0;border-radius:10px;cursor:pointer;border:2px solid var(--line);background:transparent;color:var(--sub);min-height:48px}
+.slot.open{border-color:var(--open);background:var(--open-bg);color:var(--open)}
+.slot.mine{border-color:var(--mine);background:var(--mine-bg);color:var(--mine)}
+.slot.taken{border-style:dashed;color:var(--taken);cursor:default}
+.slot:disabled{cursor:default}
+.slot.busy{opacity:.5}
+.slot small{display:block;font-size:11px;line-height:1.2;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--mine);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=date],input[type=text],input[type=email],textarea,select{font:inherit;font-size:17px;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+input[type=date],select{width:auto}
+textarea{min-height:110px;resize:vertical}
+label.chk{display:flex;gap:10px;align-items:center;margin:8px 0;font-weight:700}
+label.chk input{width:22px;height:22px}
+.btn{font:inherit;font-weight:700;font-size:17px;padding:12px 18px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.warn{white-space:nowrap;flex-shrink:0;background:transparent;color:var(--danger);border:2px solid var(--danger);padding:6px 12px;font-size:15px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font:inherit;font-size:14px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chip.cur{border-color:var(--ink);font-weight:900}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--sub);margin:4px 0 10px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:2px solid var(--line)}
+.legend .l-open::before{border-color:var(--open);background:var(--open-bg)}
+.legend .l-mine::before{border-color:var(--mine);background:var(--mine-bg)}
+.legend .l-taken::before{border-style:dashed}
+.item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:none}
+.when{font-weight:900}
+.info{font-size:15px;color:var(--sub);word-break:break-all}
+.empty{color:var(--sub);background:var(--paper);border:1px dashed var(--line);border-radius:14px;padding:18px;text-align:center}
+.mybox{background:var(--mine-bg);border:2px solid var(--mine);border-radius:14px;padding:12px 14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.sheet-bg.show{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:640px;max-height:100vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 18px 24px}
+.sheet h3{margin:0 0 4px;font-size:21px;font-weight:900}
+.sheet label{display:block;font-weight:700;margin:14px 0 4px}
+.sheet .row{margin-top:18px}
+.sheet .row .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:90%}
+.toast.show{opacity:1}
+.zoombox{white-space:pre-wrap;background:var(--open-bg);border:2px solid var(--open);border-radius:12px;padding:12px 14px;margin:12px 0;word-break:break-all}
+.zoombox:empty{display:none}
+.help{font-size:15px;color:var(--sub);margin:6px 0 10px}
+.link{font-size:14px;word-break:break-all;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 10px;user-select:all}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title">面談予約</h1>
+    <p id="sub">読み込み中です…</p>
+  </header>
+  <div class="tabs" id="tabs" hidden>
+    <button data-v="slots" aria-selected="true">空き時間</button>
+    <button data-v="list" aria-selected="false">予約一覧</button>
+    <button data-v="settings" aria-selected="false">設定</button>
+  </div>
+  <main id="main"><p class="empty">読み込み中です…</p></main>
+</div>
+
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle"></h3>
+    <div id="sheetLen" style="color:var(--sub)"></div>
+    <label for="fName">氏名</label>
+    <input type="text" id="fName" autocomplete="name" placeholder="例）山田 花子">
+    <label for="fRef">紹介者名（いなければ空欄）</label>
+    <input type="text" id="fRef" placeholder="例）鈴木 一郎">
+    <label for="fMail">メールアドレス</label>
+    <input type="email" id="fMail" autocomplete="email" inputmode="email" placeholder="例）hanako@example.com">
+    <label for="fLine">LINEアカウント名</label>
+    <input type="text" id="fLine" placeholder="LINEで表示されている名前">
+    <div class="row">
+      <button class="btn ghost" id="fCancel">やめる</button>
+      <button class="btn" id="fOk">予約する</button>
+    </div>
+  </div>
+</div>
+<div class="sheet-bg" id="doneBg">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+    <h3 id="doneTitle">予約できました</h3>
+    <div id="doneWhen" class="when" style="font-size:18px"></div>
+    <div id="doneZoom" class="zoombox"></div>
+    <p class="help">確認のメールをお送りしました。届かないときは迷惑メールフォルダも見てください。取り消しはメールのリンクか、このページの「あなたの予約」からできます。</p>
+    <div class="row"><button class="btn" id="doneOk">閉じる</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* URLの ?s=（裏方のID）&admin=（管理キー）&cancel=（取り消しキー） を読む */
+const Q = new URLSearchParams(location.search);
+const clean = v => String(v||"").replace(/[^A-Za-z0-9_-]/g,"").slice(0,120);
+const BOOT = { s: clean(Q.get("s")), admin: clean(Q.get("admin")), cancel: clean(Q.get("cancel")) };
+BOOT.url = location.origin + location.pathname + "?s=" + BOOT.s;
+const API = "https://script.google.com/macros/s/" + BOOT.s + "/exec";
+const WD = ["日","月","火","水","木","金","土"];
+const $ = id => document.getElementById(id);
+function pad(n){return String(n).padStart(2,"0")}
+function fmtDate(d){const [y,m,dd]=d.split("-").map(Number);return `${m}月${dd}日（${WD[new Date(y,m-1,dd).getDay()]}）`}
+function todayStr(){const n=new Date();return `${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())}`}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2600)}
+function lsGet(k){try{return localStorage.getItem(k)||""}catch(e){return""}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function getTokens(){try{return JSON.parse(lsGet("mendan-tokens")||"[]")}catch(e){return[]}}
+function setTokens(a){lsSet("mendan-tokens",JSON.stringify(a.slice(-30)))}
+async function call(fn,...args){
+  /* Googleの裏方に送る。text/plain にしておくと、ブラウザの事前確認なしで送れる */
+  const res=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn,args})});
+  const j=await res.json();
+  if(!j.ok)throw new Error(j.error||"うまくいきませんでした");
+  return j.result;
+}
+function groupByDate(list){const m=new Map();for(const s of list){if(!m.has(s.date))m.set(s.date,[]);m.get(s.date).push(s)}return m}
+function fail(e){console.error(e);toast((e&&e.message)||"うまくいきませんでした。もう一度お試しください")}
+
+let pub=null, adm=null, view="slots", editDate=todayStr(), pending=null;
+
+/* ---------- 予約する人 ---------- */
+
+async function loadPublic(){
+  try{pub=await call("getPublic",getTokens());renderMember()}
+  catch(e){$("main").innerHTML='<p class="empty">読み込めませんでした。少し待ってから開き直してください。</p>'}
+}
+
+function renderMember(){
+  document.title=pub.title;$("title").textContent=pub.title;
+  $("sub").textContent=(pub.hostName?pub.hostName+"との":"")+"面談を、空いている時間から予約できます";
+  let h="";
+  if(pub.mine.length){
+    h+='<h2>あなたの予約</h2><div class="mybox">';
+    for(const s of pub.mine)h+=`<div class="item"><div class="when">${fmtDate(s.date)} ${s.time}〜（${s.minutes}分）</div><button class="btn warn" data-cancel="${esc(s.token)}">取り消す</button></div>`;
+    h+="</div>";
+    if(pub.zoomText)h+=`<div class="zoombox">${esc(pub.zoomText)}</div>`;
+  }
+  h+='<h2>予約できる時間</h2><div class="legend"><span class="l-open">空いています</span><span class="l-mine">あなたの予約</span><span class="l-taken">予約済み</span></div>';
+  const days=groupByDate(pub.slots);
+  if(!days.size)h+='<p class="empty">いま予約できる時間はありません。<br>空き時間が登録されるまでお待ちください。</p>';
+  for(const [d,list] of days){
+    h+=`<section class="day"><h3>${fmtDate(d)}</h3><div class="grid">`;
+    for(const s of list){
+      if(s.state==="open")h+=`<button class="slot open" data-book="${esc(s.id)}" aria-label="${s.time}から${s.minutes}分 空いています">${s.time}</button>`;
+      else if(s.state==="mine")h+=`<button class="slot mine" disabled aria-label="${s.time} あなたの予約">${s.time}</button>`;
+      else h+=`<button class="slot taken" disabled aria-label="${s.time} 予約済み">${s.time}</button>`;
+    }
+    h+="</div></section>";
+  }
+  $("main").innerHTML=h;
+  $("main").querySelectorAll("[data-book]").forEach(b=>b.onclick=()=>openSheet(b.dataset.book));
+  $("main").querySelectorAll("[data-cancel]").forEach(b=>b.onclick=()=>cancelMine(b.dataset.cancel,b));
+}
+
+function openSheet(id){
+  const s=pub.slots.find(x=>x.id===id);if(!s)return;
+  pending=s;
+  $("sheetTitle").textContent=`${fmtDate(s.date)} ${s.time}〜`;
+  $("sheetLen").textContent=`${s.minutes}分の面談`;
+  $("fName").value=lsGet("mendan-name");$("fRef").value=lsGet("mendan-ref");$("fMail").value=lsGet("mendan-mail");$("fLine").value=lsGet("mendan-line");
+  $("sheetBg").classList.add("show");
+  setTimeout(()=>$("fName").focus(),50);
+}
+function closeSheet(){$("sheetBg").classList.remove("show");pending=null}
+$("fCancel").onclick=closeSheet;
+$("sheetBg").onclick=e=>{if(e.target===$("sheetBg"))closeSheet()};
+$("doneOk").onclick=()=>$("doneBg").classList.remove("show");
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeSheet();$("doneBg").classList.remove("show")}});
+
+$("fOk").onclick=async()=>{
+  const form={name:$("fName").value.trim(),referrer:$("fRef").value.trim(),email:$("fMail").value.trim(),line:$("fLine").value.trim()};
+  if(!form.name){toast("氏名を入れてください");$("fName").focus();return}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)){toast("メールアドレスを確認してください");$("fMail").focus();return}
+  if(!form.line){toast("LINEアカウント名を入れてください");$("fLine").focus();return}
+  if(!pending)return;
+  const s=pending;
+  $("fOk").disabled=true;$("fOk").textContent="予約しています…";
+  try{
+    const r=await call("book",s.id,form,BOOT.url);
+    if(!r.ok){toast(r.msg);closeSheet();loadPublic();return}
+    lsSet("mendan-name",form.name);lsSet("mendan-ref",form.referrer);lsSet("mendan-mail",form.email);lsSet("mendan-line",form.line);
+    setTokens(getTokens().concat(r.token));
+    closeSheet();
+    $("doneWhen").textContent=`${fmtDate(r.slot.date)} ${r.slot.time}〜（${r.slot.minutes}分）`;
+    $("doneZoom").textContent=r.zoomText||"";
+    $("doneBg").classList.add("show");
+    loadPublic();
+  }catch(e){fail(e)}
+  finally{$("fOk").disabled=false;$("fOk").textContent="予約する"}
+};
+
+async function cancelMine(token,btn){
+  if(!confirm("この予約を取り消しますか？"))return;
+  btn.disabled=true;
+  try{
+    const r=await call("cancelByToken",token);
+    setTokens(getTokens().filter(t=>t!==token));
+    toast(r.ok?"取り消しました":r.msg);
+    loadPublic();
+  }catch(e){fail(e);btn.disabled=false}
+}
+
+/* ---------- メールの取り消しリンクから来た人 ---------- */
+
+async function renderCancelPage(){
+  $("sub").textContent="ご予約の取り消し";
+  try{
+    const r=await call("getCancelInfo",BOOT.cancel);
+    if(!r.ok){$("main").innerHTML=`<p class="empty">このご予約は見つかりませんでした。<br>すでに取り消されているかもしれません。</p><div class="row" style="margin-top:14px"><a class="btn" href="${esc(BOOT.url)}">予約ページへ</a></div>`;return}
+    if(r.past){$("main").innerHTML='<p class="empty">この面談の時間はもう過ぎています。</p>';return}
+    $("main").innerHTML=`<div class="card"><div class="when" style="font-size:19px">${fmtDate(r.date)} ${r.time}〜（${r.minutes}分）</div><div class="info">${esc(r.name)} 様のご予約</div></div><div class="row" style="margin-top:16px"><button class="btn warn" id="doCancel" style="padding:12px 18px;font-size:17px">この予約を取り消す</button></div>`;
+    $("doCancel").onclick=async()=>{
+      $("doCancel").disabled=true;
+      try{
+        const c=await call("cancelByToken",BOOT.cancel);
+        $("main").innerHTML=c.ok?`<p class="empty">取り消しました。<br>またご都合のよい時間でご予約ください。</p><div class="row" style="margin-top:14px"><a class="btn" href="${esc(BOOT.url)}">予約ページへ</a></div>`:`<p class="empty">${esc(c.msg)}</p>`;
+      }catch(e){fail(e);$("doCancel").disabled=false}
+    };
+  }catch(e){fail(e)}
+}
+
+/* ---------- 管理ページ ---------- */
+
+async function loadAdmin(){
+  try{adm=await call("adminGet",BOOT.admin,BOOT.url);renderAdmin()}
+  catch(e){$("main").innerHTML=`<p class="empty">${esc(e.message||"読み込めませんでした")}</p>`}
+}
+function applyAdmin(r){adm=r;if(r.msg)toast(r.msg);renderAdmin()}
+
+function renderAdmin(){
+  document.title=adm.settings.title+"（管理）";$("title").textContent=adm.settings.title;
+  $("sub").textContent="管理ページ（このURLは人に教えないでください）";
+  if(view==="list")return renderAdminList();
+  if(view==="settings")return renderSettings();
+  renderAdminSlots();
+}
+
+function timesFor(date){
+  const st=adm.settings,out=new Set();
+  for(let m=st.startHour*60;m+st.slotMinutes<=st.endHour*60;m+=st.slotMinutes)out.add(pad(Math.floor(m/60))+":"+pad(m%60));
+  adm.slots.filter(s=>s.date===date).forEach(s=>out.add(s.time));
+  return [...out].sort();
+}
+
+function renderAdminSlots(){
+  const onDay=new Map(adm.slots.filter(s=>s.date===editDate).map(s=>[s.time,s]));
+  const days=[...new Set(adm.slots.map(s=>s.date))].sort();
+  let h=`<h2>日にちをえらぶ</h2><div class="row"><input type="date" id="pick" value="${editDate}" min="${todayStr()}"></div>`;
+  if(days.length)h+='<div class="chips">'+days.map(d=>`<button class="chip${d===editDate?" cur":""}" data-day="${d}">${fmtDate(d)}</button>`).join("")+"</div>";
+  h+=`<h2>${fmtDate(editDate)} の空き時間</h2><p class="help">面談できる時間をタップすると緑色になります（1枠${adm.settings.slotMinutes}分）。もう一度タップで取り消し。</p>`;
+  h+='<div class="legend"><span class="l-open">受付中</span><span class="l-mine">予約あり</span></div>';
+  h+='<section class="day"><div class="grid">';
+  for(const t of timesFor(editDate)){
+    const s=onDay.get(t);
+    if(s&&s.state==="booked")h+=`<button class="slot mine" data-booked="1">${t}<small>${esc(s.name)}</small></button>`;
+    else if(s)h+=`<button class="slot open" data-toggle="${t}" aria-pressed="true">${t}</button>`;
+    else h+=`<button class="slot" data-toggle="${t}" aria-pressed="false">${t}</button>`;
+  }
+  h+="</div></section>";
+  h+='<div class="row"><button class="btn ghost" id="copyWeek">この日の枠を翌週にもコピー</button></div>';
+  $("main").innerHTML=h;
+  $("pick").onchange=e=>{if(e.target.value){editDate=e.target.value;renderAdmin()}};
+  $("main").querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{editDate=b.dataset.day;renderAdmin()});
+  $("main").querySelectorAll("[data-booked]").forEach(b=>b.onclick=()=>switchTab("list"));
+  $("main").querySelectorAll("[data-toggle]").forEach(b=>b.onclick=async()=>{
+    $("main").querySelectorAll("[data-toggle]").forEach(x=>x.disabled=true);b.classList.add("busy");
+    try{applyAdmin(await call("adminToggle",BOOT.admin,editDate,b.dataset.toggle))}catch(e){fail(e);renderAdmin()}
+  });
+  $("copyWeek").onclick=async()=>{
+    if(!adm.slots.some(s=>s.date===editDate)){toast("この日はまだ枠がありません");return}
+    $("copyWeek").disabled=true;
+    try{const r=await call("adminCopyWeek",BOOT.admin,editDate);editDate=r.next;applyAdmin(r);toast(`${fmtDate(r.next)}に${r.count}枠コピーしました`)}catch(e){fail(e);renderAdmin()}
+  };
+}
+
+function renderAdminList(){
+  const booked=adm.slots.filter(s=>s.state==="booked");
+  const openCount=adm.slots.length-booked.length;
+  let h=`<h2>これからの面談（${booked.length}件）</h2><p class="help">まだ空いている枠：${openCount}枠</p>`;
+  if(!booked.length)h+='<p class="empty">まだ予約は入っていません。</p>';
+  for(const [d,list] of groupByDate(booked)){
+    h+=`<section class="day"><h3>${fmtDate(d)}</h3>`;
+    for(const s of list)h+=`<div class="item"><div><div class="when">${s.time}〜（${s.minutes}分）　${esc(s.name)}</div><div class="info">紹介者：${esc(s.referrer)||"なし"}<br>LINE：${esc(s.line)}<br>メール：${esc(s.email)}<br>カレンダー：${s.calendar?"登録済み":"未登録"}</div></div><button class="btn warn" data-cancel="${esc(s.id)}">取り消す</button></div>`;
+    h+="</section>";
+  }
+  $("main").innerHTML=h;
+  $("main").querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{
+    const s=adm.slots.find(x=>x.id===b.dataset.cancel);
+    const note=adm.settings.mailCancel?"\n（相手に取り消しのメールが届きます）":"";
+    if(!confirm(`${fmtDate(s.date)} ${s.time}〜 の${s.name}さんの予約を取り消しますか？${note}`))return;
+    b.disabled=true;
+    try{applyAdmin(await call("adminCancel",BOOT.admin,s.id));toast("取り消しました")}catch(e){fail(e);b.disabled=false}
+  });
+}
+
+function renderSettings(){
+  const st=adm.settings;
+  const opt=(vals,cur,fmt)=>vals.map(v=>`<option value="${v}"${v===cur?" selected":""}>${fmt(v)}</option>`).join("");
+  const hours=[...Array(25).keys()];
+  $("main").innerHTML=`
+  <h2>予約ページのリンク</h2><p class="help">メンバーさんにはこのリンクを送ってください。</p><div class="link" id="memberLink"></div><div class="row" style="margin-top:8px"><button class="btn ghost" id="copyLink">リンクをコピー</button></div>
+  <h2>ページの名前</h2><input type="text" id="sTitle" value="${esc(st.title)}">
+  <h2>面談する人の名前</h2><p class="help">予約ページとメールの最後に出ます。例）美由紀</p><input type="text" id="sHost" value="${esc(st.hostName)}">
+  <h2>1枠の長さ</h2><select id="sMin">${opt([30,45,60,90],st.slotMinutes,v=>v+"分")}</select>
+  <p class="help">変えても、すでに登録した枠の長さはそのままです。</p>
+  <h2>登録できる時間帯</h2><div class="row"><select id="sStart">${opt(hours.slice(0,24),st.startHour,v=>v+"時")}</select>〜<select id="sEnd">${opt(hours.slice(1),st.endHour,v=>v+"時")}</select></div>
+  <h2>予約した人に見せる案内</h2><p class="help">予約完了の画面とメールに出ます。ZoomのURLやIDを書いておいてください。</p>
+  <div id="sZoomBox"></div>
+  <h2>自動で送るメール</h2>
+  <label class="chk"><input type="checkbox" id="mBooked"${st.mailBooked?" checked":""}>予約した人へ「予約完了メール」</label>
+  <label class="chk"><input type="checkbox" id="mNotify"${st.mailNotify?" checked":""}>自分へ「予約が入りました」「取り消されました」</label>
+  <label class="chk"><input type="checkbox" id="mCancel"${st.mailCancel?" checked":""}>予約した人へ「取り消しのお知らせ」</label>
+  <label class="chk"><input type="checkbox" id="mRemind"${st.mailRemind?" checked":""}>予約した人へ「前日リマインド」（前日18時ごろ）</label>
+  <div class="row" style="margin-top:18px"><button class="btn" id="sSave">設定を保存</button></div>`;
+  /* 入力欄はあとから作って中身を入れる */
+  const ta=document.createElement("textarea");ta.id="sZoom";$("sZoomBox").appendChild(ta);
+  $("sZoom").value=st.zoomText||"";
+  $("memberLink").textContent=BOOT.url;
+  $("copyLink").onclick=async()=>{try{await navigator.clipboard.writeText(BOOT.url);toast("コピーしました")}catch(e){toast("コピーできませんでした。長押しでコピーしてください")}};
+  $("sZoom").placeholder="例）お時間になったらこちらのZoomにお入りください。\nhttps://zoom.us/j/...\nミーティングID：123 456 7890\nパスコード：abc123";
+  $("sSave").onclick=async()=>{
+    const input={title:$("sTitle").value,hostName:$("sHost").value,slotMinutes:Number($("sMin").value),startHour:Number($("sStart").value),endHour:Number($("sEnd").value),
+      zoomText:$("sZoom").value,mailBooked:$("mBooked").checked,mailNotify:$("mNotify").checked,mailCancel:$("mCancel").checked,mailRemind:$("mRemind").checked};
+    if(input.endHour<=input.startHour){toast("終わりの時間は、始まりより後にしてください");return}
+    $("sSave").disabled=true;
+    try{applyAdmin(await call("adminSaveSettings",BOOT.admin,input));toast("設定を保存しました")}catch(e){fail(e);$("sSave").disabled=false}
+  };
+}
+
+function switchTab(v){view=v;[...$("tabs").children].forEach(x=>x.setAttribute("aria-selected",x.dataset.v===v));renderAdmin()}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b)switchTab(b.dataset.v)});
+
+/* ---------- はじまり ---------- */
+
+if(!BOOT.s)$("main").innerHTML='<p class="empty">リンクが正しくないようです。<br>送られてきたリンクをもう一度開いてください。</p>';
+else if(BOOT.cancel)renderCancelPage();
+else if(BOOT.admin){$("tabs").hidden=false;loadAdmin()}
+else loadPublic();
+</script>
+</body>
+</html>
