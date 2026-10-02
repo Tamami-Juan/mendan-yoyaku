@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>面談予約</title>
+<title>予約</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -83,7 +83,7 @@ label.chk input{width:22px;height:22px}
 <body>
 <div class="wrap">
   <header>
-    <h1 id="title">面談予約</h1>
+    <h1 id="title">&nbsp;</h1>
     <p id="sub">読み込み中です…</p>
   </header>
   <div class="tabs" id="tabs" hidden>
@@ -241,6 +241,7 @@ async function cancelMine(token,btn){
 
 async function renderCancelPage(){
   $("sub").textContent="ご予約の取り消し";
+  call("getPublic",[]).then(p=>{document.title=p.title;$("title").textContent=p.title}).catch(()=>{});
   try{
     const r=await call("getCancelInfo",BOOT.cancel);
     if(!r.ok){$("main").innerHTML=`<p class="empty">このご予約は見つかりませんでした。<br>すでに取り消されているかもしれません。</p><div class="row" style="margin-top:14px"><a class="btn" href="${esc(BOOT.url)}">予約ページへ</a></div>`;return}
